@@ -1,0 +1,5 @@
+.DS_Store
+.build/
+.superpowers/
+__pycache__/
+*.py[cod]

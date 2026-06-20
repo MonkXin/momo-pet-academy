@@ -1,0 +1,401 @@
+import SwiftUI
+
+enum AppMetadata {
+    static let name = "小白的学堂时光"
+}
+
+enum PetVisualAsset {
+    static let masterImageName = "momo-rabbit-3d"
+
+    static var masterImageURL: URL? {
+        Bundle.module.url(forResource: masterImageName, withExtension: "png")
+    }
+}
+
+@main
+struct MomoPetApp: App {
+    @StateObject private var store: PetStore
+
+    init() {
+        let repository = PetRepository(url: Self.saveURL)
+        let profile = (try? repository.load()) ?? PetProfile()
+        let store = PetStore(profile: profile, repository: repository)
+        let now = Date()
+        if let lastOpened = UserDefaults.standard.object(forKey: Self.lastOpenedKey) as? Date {
+            store.reconcileOfflineTime(since: lastOpened, now: now)
+        }
+        UserDefaults.standard.set(now, forKey: Self.lastOpenedKey)
+        _store = StateObject(wrappedValue: store)
+    }
+
+    var body: some Scene {
+        WindowGroup(AppMetadata.name) {
+            AcademyView()
+                .environmentObject(store)
+                .background(FloatingPetWindowConfigurator())
+        }
+        .windowStyle(.hiddenTitleBar)
+    }
+
+    private static var saveURL: URL {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return support.appendingPathComponent("MomoPet", isDirectory: true).appendingPathComponent("pet.json")
+    }
+
+    private static let lastOpenedKey = "momoPetLastOpened"
+}
+
+private struct AcademyView: View {
+    @EnvironmentObject private var store: PetStore
+    @State private var showingStarCatch = false
+    @State private var showingRoom = false
+    @State private var panelMode: PetPanelMode = .academy
+
+    var body: some View {
+        HStack(spacing: 20) {
+            if panelMode == .compact {
+                compactPet
+            } else {
+                rabbitCard
+                VStack(alignment: .leading, spacing: 14) {
+                Text("学堂成长 · \(store.profile.schoolStage == .kindergarten ? "幼儿园" : "小学")")
+                    .font(.title2.bold())
+                Text("幼儿园  →  小学  →  中学  →  学院  →  毕业旅行")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                statGrid
+                eventCard
+                Text("今日课程").font(.headline)
+                courseRow
+                HStack {
+                    Button("喂食") { store.dispatch(.fed) }
+                    Button("摸摸") { store.dispatch(.petted) }
+                    Button("清洁") { store.dispatch(.cleaned) }
+                    Button("休息") { store.dispatch(.rested) }
+                    Button("玩小游戏") { showingStarCatch = true }
+                    Button("小屋") { showingRoom = true }
+                    Button("收起为桌宠") { panelMode = .compact }
+                    if !store.profile.rewards.isEmpty {
+                        Menu("衣橱") {
+                            ForEach(store.profile.rewards.sorted(), id: \.self) { accessory in
+                                Button(accessory) { store.dispatch(.accessoryEquipped(accessory)) }
+                            }
+                        }
+                    }
+                }
+                .buttonStyle(.bordered)
+                }
+            }
+        }
+        .padding(24)
+        .frame(minWidth: 760, minHeight: 430)
+        .background(Color(red: 1.0, green: 0.97, blue: 0.89))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
+        .sheet(isPresented: $showingStarCatch) {
+            StarCatchView {
+                store.dispatch(.miniGameCompleted(.starCatch, won: true))
+            }
+        }
+        .sheet(isPresented: $showingRoom) {
+            RoomView()
+                .environmentObject(store)
+        }
+    }
+
+    private var rabbitCard: some View {
+        VStack(spacing: 10) {
+            RabbitPortraitView(profile: store.profile, size: 235)
+                .frame(width: 210, height: 235)
+                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            Text("小白 · \(activityTitle)").font(.headline)
+            Text(store.profile.equippedAccessory ?? "还没有佩戴配饰")
+                .font(.caption).foregroundColor(.blue)
+            Text("饱食 \(store.profile.hunger.value)  ·  心情 \(store.profile.mood.value)  ·  精力 \(store.profile.energy.value)")
+                .font(.caption).foregroundColor(.secondary).multilineTextAlignment(.center)
+        }
+        .frame(width: 245)
+    }
+
+    private var compactPet: some View {
+        VStack(spacing: 10) {
+            rabbitCard
+            Button("打开学堂") { panelMode = .academy }
+                .buttonStyle(.borderedProminent)
+        }
+        .frame(width: 270)
+    }
+
+    private var activityTitle: String {
+        switch PetActivity.current(for: store.profile) {
+        case .studying: return "认真学习中"
+        case .hopping: return "开心蹦跳中"
+        case .napping: return "午睡中"
+        case .hungry: return "肚子咕咕叫"
+        case .lonely: return "想要摸摸"
+        }
+    }
+
+    private var statGrid: some View {
+        VStack(spacing: 7) {
+            StatRow(name: "智力", value: store.profile.intelligence.value, tint: .blue)
+            StatRow(name: "武力", value: store.profile.strength.value, tint: .orange)
+            StatRow(name: "魅力", value: store.profile.charm.value, tint: .pink)
+            StatRow(name: "创造力", value: store.profile.creativity.value, tint: .purple)
+            StatRow(name: "勇气", value: store.profile.courage.value, tint: .green)
+        }
+    }
+
+    @ViewBuilder
+    private var courseRow: some View {
+        HStack {
+            if store.profile.schoolStage == .primarySchool {
+                CourseButton(title: "阅读课", icon: "book.closed", color: .blue) { store.dispatch(.primaryCourseCompleted(.reading)) }
+                CourseButton(title: "科学观察", icon: "magnifyingglass", color: .purple) { store.dispatch(.primaryCourseCompleted(.science)) }
+                CourseButton(title: "运动社团", icon: "figure.run", color: .orange) { store.dispatch(.primaryCourseCompleted(.sportsClub)) }
+            } else {
+                CourseButton(title: "识字小课", icon: "character.book.closed", color: .blue) { store.dispatch(.courseCompleted(.literacy)) }
+                CourseButton(title: "跳跳训练", icon: "figure.jump", color: .orange) { store.dispatch(.courseCompleted(.jumping)) }
+                CourseButton(title: "小小舞台", icon: "theatermasks", color: .pink) { store.dispatch(.courseCompleted(.stage)) }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var eventCard: some View {
+        if store.profile.schoolStage == .primarySchool {
+            primaryEventCard
+        } else {
+            kindergartenEventCard
+        }
+    }
+
+    @ViewBuilder
+    private var kindergartenEventCard: some View {
+        let available = KindergartenEvent.allCases.first {
+            store.profile.kindergartenXP >= $0.requiredXP && !store.profile.completedEvents.contains($0)
+        }
+        if store.profile.isKindergartenGraduate && store.profile.schoolStage == .kindergarten {
+            HStack {
+                Text("🎓").font(.title)
+                VStack(alignment: .leading) {
+                    Text("幼儿园毕业啦！").font(.headline)
+                    Text("已解锁：小学入学礼与毕业旅行纪念。")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
+                Button("前往小学") { store.dispatch(.graduationClaimed) }
+                    .buttonStyle(.borderedProminent)
+            }
+            .padding(10)
+            .background(Color.yellow.opacity(0.2))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        } else if let event = available {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("成长事件：\(event.title)").font(.headline)
+                    Text("奖励：\(event.rewardName)").font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
+                Button("领取") { store.dispatch(.kindergartenEventClaimed(event)) }
+                    .buttonStyle(.borderedProminent)
+            }
+            .padding(10)
+            .background(Color.white.opacity(0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        } else {
+            Text("成长经验：\(store.profile.kindergartenXP) · 继续上课解锁幼儿园事件")
+                .font(.caption).foregroundColor(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var primaryEventCard: some View {
+        let available = PrimaryEvent.allCases.first {
+            store.profile.primaryXP >= $0.requiredXP && !store.profile.completedPrimaryEvents.contains($0)
+        }
+        if store.profile.isPrimarySchoolComplete {
+            HStack {
+                Text("🎒").font(.title)
+                VStack(alignment: .leading) {
+                    Text("小学结业啦！").font(.headline)
+                    Text("中学内容筹备中，先带着小白享受校园时光吧。")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            .padding(10)
+            .background(Color.green.opacity(0.16))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        } else if let event = available {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("班级事件：\(event.title)").font(.headline)
+                    Text("奖励：\(event.rewardName)").font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
+                Button("领取") { store.dispatch(.primaryEventClaimed(event)) }
+                    .buttonStyle(.borderedProminent)
+            }
+            .padding(10)
+            .background(Color.white.opacity(0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        } else {
+            Text("小学经验：\(store.profile.primaryXP) · 完成课程解锁班级事件")
+                .font(.caption).foregroundColor(.secondary)
+        }
+    }
+}
+
+private struct RoomView: View {
+    @EnvironmentObject private var store: PetStore
+    @Environment(\.dismiss) private var dismiss
+
+    private var furnitureRewards: [String] {
+        store.profile.rewards.filter { $0 != "蓝色领结" && $0 != "小红领巾" }.sorted()
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack { Text("小白的小屋").font(.title2.bold()); Spacer(); Button("完成") { dismiss() } }
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 24).fill(Color(red: 0.87, green: 0.79, blue: 0.65))
+                VStack {
+                    Text("☁︎").font(.system(size: 46)).opacity(0.7)
+                    Spacer()
+                    HStack { Text("🛏️").font(.system(size: 62)); Spacer(); Text("🪴").font(.system(size: 48)) }
+                }
+                .padding(28)
+                if store.profile.placedFurniture.contains("云朵绘本") {
+                    Text("📖").font(.system(size: 56)).offset(x: -85, y: -25)
+                }
+                if store.profile.placedFurniture.contains("星星奖牌") {
+                    Text("🏅").font(.system(size: 46)).offset(x: 78, y: -95)
+                }
+                if store.profile.placedFurniture.contains("小舞台摆件") {
+                    Text("🎭").font(.system(size: 50)).offset(x: 0, y: -48)
+                }
+            }
+            .frame(height: 260)
+            if furnitureRewards.isEmpty {
+                Text("完成成长事件后，家具会出现在这里。")
+                    .foregroundColor(.secondary)
+            } else {
+                HStack {
+                    ForEach(furnitureRewards, id: \.self) { furniture in
+                        Button("摆放 \(furniture)") { store.dispatch(.furniturePlaced(furniture)) }
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+        }
+        .padding(24)
+        .frame(width: 520, height: 430)
+        .background(Color(red: 1.0, green: 0.97, blue: 0.89))
+    }
+}
+
+private extension KindergartenEvent {
+    var title: String {
+        switch self {
+        case .introduction: return "第一次自我介绍"
+        case .quiz: return "准备小测验"
+        case .sportsDay: return "幼儿园运动会"
+        case .showcase: return "展示日"
+        }
+    }
+
+    var rewardName: String {
+        switch self {
+        case .introduction: return "蓝色领结"
+        case .quiz: return "云朵绘本"
+        case .sportsDay: return "星星奖牌"
+        case .showcase: return "小舞台摆件"
+        }
+    }
+}
+
+private extension PrimaryEvent {
+    var title: String {
+        switch self {
+        case .introduction: return "新生自我介绍"
+        case .carrotGarden: return "胡萝卜花圃"
+        case .sportsDay: return "班级运动日"
+        case .showcase: return "作品展示"
+        }
+    }
+
+    var rewardName: String {
+        switch self {
+        case .introduction: return "小红领巾"
+        case .carrotGarden: return "花圃小徽章"
+        case .sportsDay: return "运动水壶"
+        case .showcase: return "云朵书包"
+        }
+    }
+}
+
+private struct StarCatchView: View {
+    let won: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var caught = false
+
+    var body: some View {
+        VStack(spacing: 22) {
+            Text("接星星").font(.title.bold())
+            Text(caught ? "小白接住星星啦！心情 +8，成长经验 +5" : "在星星落地前点一下它！")
+                .foregroundColor(.secondary)
+            Button {
+                guard !caught else { return }
+                caught = true
+                won()
+            } label: {
+                Image(systemName: caught ? "star.fill" : "star.circle.fill")
+                    .font(.system(size: 100))
+                    .foregroundColor(.yellow)
+            }
+            Button(caught ? "完成" : "稍后再玩") { dismiss() }
+                .buttonStyle(.borderedProminent)
+        }
+        .padding(36)
+        .frame(width: 380, height: 300)
+        .background(Color(red: 0.95, green: 0.98, blue: 1.0))
+    }
+}
+
+private struct FloatingPetWindowConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            guard let window = view.window else { return }
+            window.level = .floating
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.isMovableByWindowBackground = true
+            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+private struct StatRow: View {
+    let name: String
+    let value: Int
+    let tint: Color
+    var body: some View {
+        HStack { Text(name).frame(width: 48, alignment: .leading); ProgressView(value: Double(value), total: 100).tint(tint); Text("\(value)").monospacedDigit().frame(width: 30, alignment: .trailing) }
+    }
+}
+
+private struct CourseButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) { VStack(spacing: 7) { Image(systemName: icon).font(.title2); Text(title).font(.caption.bold()) }.frame(width: 105, height: 78) }
+            .buttonStyle(.borderedProminent).tint(color)
+    }
+}
