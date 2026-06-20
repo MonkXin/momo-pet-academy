@@ -28,17 +28,25 @@ struct RabbitPortraitView: View {
     private var motion: PetMotionProfile { .forActivity(activity) }
 
     var body: some View {
-        Image(PetVisualAsset.masterImageName, bundle: .module)
-            .resizable()
-            .scaledToFit()
-            .scaleEffect(reduceMotion ? 1 : (breathing ? motion.breathingScale : 1))
-            .rotationEffect(.degrees(reduceMotion ? 0 : (swaying ? motion.swayAngle : -motion.swayAngle)))
-            .overlay(blinkOverlay)
-            .overlay(emphasisOverlay)
-            .accessibilityLabel(RabbitPortraitCopy.accessibilityLabel(for: activity))
-            .onAppear(perform: startMotionIfAllowed)
-            .onDisappear { blinkWorkItem?.cancel() }
-            .onChange(of: activity) { _ in startMotionIfAllowed() }
+        Group {
+            if let image = PetVisualAsset.masterImage() {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                Image(systemName: "photo")
+                    .font(.system(size: size * 0.3))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .scaleEffect(reduceMotion ? 1 : (breathing ? motion.breathingScale : 1))
+        .rotationEffect(.degrees(reduceMotion ? 0 : (swaying ? motion.swayAngle : -motion.swayAngle)))
+        .overlay(blinkOverlay)
+        .overlay(emphasisOverlay)
+        .accessibilityLabel(RabbitPortraitCopy.accessibilityLabel(for: activity))
+        .onAppear(perform: startMotionIfAllowed)
+        .onDisappear { blinkWorkItem?.cancel() }
+        .onChange(of: activity) { _ in startMotionIfAllowed() }
     }
 
     @ViewBuilder

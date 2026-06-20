@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 enum AppMetadata {
     static let name = "小白的学堂时光"
@@ -9,6 +10,11 @@ enum PetVisualAsset {
 
     static var masterImageURL: URL? {
         Bundle.module.url(forResource: masterImageName, withExtension: "png")
+    }
+
+    static func masterImage() -> NSImage? {
+        guard let masterImageURL else { return nil }
+        return NSImage(contentsOf: masterImageURL)
     }
 }
 

@@ -1,4 +1,5 @@
 import XCTest
+import AppKit
 @testable import MomoPetApp
 
 final class PetVisualAssetTests: XCTestCase {
@@ -8,5 +9,9 @@ final class PetVisualAssetTests: XCTestCase {
 
     func testGeneratedRabbitImageIsBundledForThePortrait() {
         XCTAssertNotNil(PetVisualAsset.masterImageURL)
+    }
+
+    func testGeneratedRabbitImageCanBeDecodedForDisplay() {
+        XCTAssertNotNil(PetVisualAsset.masterImage())
     }
 }
