@@ -14,4 +14,8 @@ final class PetVisualAssetTests: XCTestCase {
     func testGeneratedRabbitImageCanBeDecodedForDisplay() {
         XCTAssertNotNil(PetVisualAsset.masterImage())
     }
+
+    func testDesktopPetImageCanBeDecoded() {
+        XCTAssertNotNil(PetVisualAsset.desktopPetImage())
+    }
 }

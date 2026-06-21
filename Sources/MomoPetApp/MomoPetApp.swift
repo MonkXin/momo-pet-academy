@@ -7,6 +7,7 @@ enum AppMetadata {
 
 enum PetVisualAsset {
     static let masterImageName = "momo-rabbit-3d"
+    static let desktopPetImageName = "momo-rabbit-desktop"
 
     static var masterImageURL: URL? {
         Bundle.module.url(forResource: masterImageName, withExtension: "png")
@@ -15,6 +16,11 @@ enum PetVisualAsset {
     static func masterImage() -> NSImage? {
         guard let masterImageURL else { return nil }
         return NSImage(contentsOf: masterImageURL)
+    }
+
+    static func desktopPetImage() -> NSImage? {
+        guard let url = Bundle.module.url(forResource: desktopPetImageName, withExtension: "png") else { return nil }
+        return NSImage(contentsOf: url)
     }
 }
 
@@ -80,7 +86,14 @@ private struct AcademyView: View {
                     Button("休息") { store.dispatch(.rested) }
                     Button("玩小游戏") { showingStarCatch = true }
                     Button("小屋") { showingRoom = true }
-                    Button("收起为桌宠") { panelMode = .compact }
+                    Button("收起为桌宠") {
+                        let academyWindow = NSApp.keyWindow
+                        DesktopPetWindowController.shared.show(store: store) {
+                            academyWindow?.makeKeyAndOrderFront(nil)
+                            NSApp.activate(ignoringOtherApps: true)
+                        }
+                        academyWindow?.orderOut(nil)
+                    }
                     if !store.profile.rewards.isEmpty {
                         Menu("衣橱") {
                             ForEach(store.profile.rewards.sorted(), id: \.self) { accessory in
