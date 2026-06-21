@@ -1,5 +1,14 @@
 import SwiftUI
 
+enum DesktopPetTapIntent: Equatable {
+    case pet
+    case openAcademy
+
+    static func forTapCount(_ count: Int) -> Self {
+        count >= 2 ? .openAcademy : .pet
+    }
+}
+
 struct DesktopPetView: View {
     @ObservedObject var store: PetStore
     let openAcademy: () -> Void
@@ -18,8 +27,11 @@ struct DesktopPetView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { store.dispatch(.petted) }
-        .onTapGesture(count: 2, perform: openAcademy)
+        .gesture(
+            TapGesture(count: 2)
+                .onEnded { perform(.openAcademy) }
+                .exclusively(before: TapGesture().onEnded { perform(.pet) })
+        )
         .contextMenu {
             Button("喂食") { store.dispatch(.fed) }
             Button("休息") { store.dispatch(.rested) }
@@ -28,5 +40,12 @@ struct DesktopPetView: View {
             Button("退出", action: quit)
         }
         .accessibilityLabel("小白桌宠")
+    }
+
+    private func perform(_ intent: DesktopPetTapIntent) {
+        switch intent {
+        case .pet: store.dispatch(.petted)
+        case .openAcademy: openAcademy()
+        }
     }
 }
