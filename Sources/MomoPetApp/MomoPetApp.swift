@@ -5,6 +5,12 @@ enum AppMetadata {
     static let name = "小白的学堂时光"
 }
 
+enum DesktopPetPose: String {
+    case idle = "momo-rabbit-desktop-idle"
+    case petted = "momo-rabbit-desktop-petted"
+    case fed = "momo-rabbit-desktop-fed"
+}
+
 enum PetVisualAsset {
     static let masterImageName = "momo-rabbit-3d"
     static let desktopPetImageName = "momo-rabbit-desktop"
@@ -18,9 +24,19 @@ enum PetVisualAsset {
         return NSImage(contentsOf: masterImageURL)
     }
 
-    static func desktopPetImage() -> NSImage? {
-        guard let url = Bundle.module.url(forResource: desktopPetImageName, withExtension: "png") else { return nil }
-        return NSImage(contentsOf: url)
+    static func desktopPetImage(for pose: DesktopPetPose = .idle) -> NSImage? {
+        if let image = image(named: pose.rawValue) {
+            return image
+        }
+        if let idleImage = image(named: DesktopPetPose.idle.rawValue) {
+            return idleImage
+        }
+        return image(named: desktopPetImageName)
+    }
+
+    private static func image(named name: String) -> NSImage? {
+        Bundle.module.url(forResource: name, withExtension: "png")
+            .flatMap(NSImage.init(contentsOf:))
     }
 }
 

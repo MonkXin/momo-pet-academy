@@ -18,4 +18,13 @@ final class PetVisualAssetTests: XCTestCase {
     func testDesktopPetImageCanBeDecoded() {
         XCTAssertNotNil(PetVisualAsset.desktopPetImage())
     }
+
+    func testIdleDesktopPetAssetCanBeDecoded() {
+        XCTAssertNotNil(PetVisualAsset.desktopPetImage(for: .idle))
+    }
+
+    func testMissingActionPoseFallsBackToIdleImage() {
+        XCTAssertNotNil(PetVisualAsset.desktopPetImage(for: .petted))
+        XCTAssertNotNil(PetVisualAsset.desktopPetImage(for: .fed))
+    }
 }
