@@ -6,6 +6,15 @@ enum DesktopPetFeedback: Equatable {
 
     var duration: TimeInterval { 0.8 }
 
+    var pose: DesktopPetPose {
+        switch self {
+        case .heart:
+            return .petted
+        case .carrot:
+            return .fed
+        }
+    }
+
     static func forEvent(_ event: PetEvent) -> Self? {
         switch event {
         case .petted:

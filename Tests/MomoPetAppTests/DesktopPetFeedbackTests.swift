@@ -18,4 +18,9 @@ final class DesktopPetFeedbackTests: XCTestCase {
         XCTAssertEqual(DesktopPetFeedback.heart.duration, 0.8)
         XCTAssertEqual(DesktopPetFeedback.carrot.duration, 0.8)
     }
+
+    func testFeedbackSelectsMatchingOptionalPose() {
+        XCTAssertEqual(DesktopPetFeedback.heart.pose, .petted)
+        XCTAssertEqual(DesktopPetFeedback.carrot.pose, .fed)
+    }
 }
