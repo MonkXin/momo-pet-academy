@@ -79,8 +79,13 @@ private struct AcademyView: View {
     @State private var showingStarCatch = false
     @State private var showingRoom = false
     @State private var panelMode: PetPanelMode = .academy
+    @State private var desktopPetIsVisible = false
 
     var body: some View {
+        Group {
+        if desktopPetIsVisible {
+            Color.clear
+        } else {
         HStack(spacing: 20) {
             if panelMode == .compact {
                 compactPet
@@ -106,6 +111,7 @@ private struct AcademyView: View {
                     Button("收起为桌宠") {
                         let academyWindow = NSApp.keyWindow
                         DesktopPetWindowController.shared.show(store: store) {
+                            desktopPetIsVisible = false
                             academyWindow?.makeKeyAndOrderFront(nil)
                             NSApp.activate(ignoringOtherApps: true)
                         }
@@ -122,6 +128,8 @@ private struct AcademyView: View {
                 .buttonStyle(.bordered)
                 }
             }
+        }
+        }
         }
         .padding(24)
         .frame(minWidth: 760, minHeight: 430)
