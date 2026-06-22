@@ -110,6 +110,7 @@ private struct AcademyView: View {
                     Button("小屋") { showingRoom = true }
                     Button("收起为桌宠") {
                         let academyWindow = NSApp.keyWindow
+                        desktopPetIsVisible = true
                         DesktopPetWindowController.shared.show(store: store) {
                             desktopPetIsVisible = false
                             academyWindow?.makeKeyAndOrderFront(nil)
