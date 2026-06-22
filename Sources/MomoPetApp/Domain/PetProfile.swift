@@ -172,6 +172,12 @@ struct PetProfile: Codable, Equatable {
         schoolStage == .primarySchool && primaryXP >= 120 && completedPrimaryEvents == Set(PrimaryEvent.allCases)
     }
 
+    var nextWeeklyGrowthMilestone: WeeklyGrowthMilestone? {
+        WeeklyGrowthMilestone.allCases.first {
+            weeklyStudyStampCount >= $0.requiredStamps && !claimedWeeklyGrowthMilestones.contains($0)
+        }
+    }
+
     mutating func normalizeWeeklyStudyProgress(for period: StudyPeriod) {
         if weeklyGrowthWeekID != period.weekID {
             weeklyGrowthWeekID = period.weekID

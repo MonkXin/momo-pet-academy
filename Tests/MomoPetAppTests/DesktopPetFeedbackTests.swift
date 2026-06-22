@@ -27,4 +27,12 @@ final class DesktopPetFeedbackTests: XCTestCase {
     func testRestFeedbackUsesRestingPose() {
         XCTAssertEqual(DesktopPetFeedback.rest.pose, .resting)
     }
+
+    func testWeeklyGrowthPromptUsesStudyFeedback() {
+        let event = PetEvent.weeklyGrowthPromptAcknowledged(
+            .attentive,
+            period: .init(dayID: "2026-06-22", weekID: "2026-W26")
+        )
+        XCTAssertEqual(DesktopPetFeedback.forEvent(event), .study)
+    }
 }

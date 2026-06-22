@@ -42,6 +42,25 @@ final class PetDomainTests: XCTestCase {
         XCTAssertEqual(profile.claimedWeeklyGrowthMilestones, [])
     }
 
+    func testWeeklyMilestoneCanOnlyBeClaimedOnce() {
+        let period = StudyPeriod(dayID: "2026-06-22", weekID: "2026-W26")
+        let profile = PetProfile(weeklyStudyStampCount: 3, weeklyGrowthWeekID: period.weekID)
+        let once = PetReducer.reduce(.weeklyGrowthClaimed(.attentive, period: period), profile: profile)
+        let twice = PetReducer.reduce(.weeklyGrowthClaimed(.attentive, period: period), profile: once)
+
+        XCTAssertEqual(once.rewards, ["认真小贴纸"])
+        XCTAssertEqual(twice, once)
+    }
+
+    func testOldProfileJSONDecodesWithEmptyWeeklyGrowthProgress() throws {
+        let data = #"{"hunger":{"value":80},"mood":{"value":80},"cleanliness":{"value":80},"energy":{"value":80}}"#.data(using: .utf8)!
+        let profile = try JSONDecoder().decode(PetProfile.self, from: data)
+
+        XCTAssertEqual(profile.weeklyStudyStampCount, 0)
+        XCTAssertEqual(profile.claimedWeeklyGrowthMilestones, [])
+        XCTAssertEqual(profile.weeklyGrowthJournal, [])
+    }
+
     func testLowEnergyShowsNappingActivity() {
         XCTAssertEqual(PetActivity.current(for: PetProfile(energy: Stat(value: 15))), .napping)
     }
