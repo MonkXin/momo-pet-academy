@@ -72,6 +72,10 @@ enum PetEvent {
     case cleaned
     case courseCompleted(Course)
     case primaryCourseCompleted(PrimaryCourse)
+    case datedCourseCompleted(Course, period: StudyPeriod)
+    case datedPrimaryCourseCompleted(PrimaryCourse, period: StudyPeriod)
+    case weeklyGrowthClaimed(WeeklyGrowthMilestone, period: StudyPeriod)
+    case weeklyGrowthPromptAcknowledged(WeeklyGrowthMilestone, period: StudyPeriod)
     case miniGameCompleted(MiniGame, won: Bool)
     case kindergartenEventClaimed(KindergartenEvent)
     case primaryEventClaimed(PrimaryEvent)
@@ -100,22 +104,34 @@ struct PetProfile: Codable, Equatable {
     var equippedAccessory: String?
     var placedFurniture: Set<String>
     var schoolStage: SchoolStage
+    var lastStudyDay: String?
+    var studyCountOnLastStudyDay: Int
+    var weeklyStudyStampCount: Int
+    var weeklyGrowthWeekID: String?
+    var claimedWeeklyGrowthMilestones: Set<WeeklyGrowthMilestone>
+    var announcedWeeklyGrowthMilestones: Set<WeeklyGrowthMilestone>
+    var weeklyGrowthJournal: [String]
 
     init(
         hunger: Stat = Stat(value: 80), mood: Stat = Stat(value: 80), cleanliness: Stat = Stat(value: 80), energy: Stat = Stat(value: 80),
         intelligence: Stat = Stat(value: 0), strength: Stat = Stat(value: 0), charm: Stat = Stat(value: 0), creativity: Stat = Stat(value: 0), courage: Stat = Stat(value: 0),
         kindergartenXP: Int = 0, completedEvents: Set<KindergartenEvent> = [], primaryXP: Int = 0, completedPrimaryEvents: Set<PrimaryEvent> = [], rewards: Set<String> = [], equippedAccessory: String? = nil,
-        placedFurniture: Set<String> = [], schoolStage: SchoolStage = .kindergarten
+        placedFurniture: Set<String> = [], schoolStage: SchoolStage = .kindergarten,
+        lastStudyDay: String? = nil, studyCountOnLastStudyDay: Int = 0, weeklyStudyStampCount: Int = 0, weeklyGrowthWeekID: String? = nil,
+        claimedWeeklyGrowthMilestones: Set<WeeklyGrowthMilestone> = [], announcedWeeklyGrowthMilestones: Set<WeeklyGrowthMilestone> = [], weeklyGrowthJournal: [String] = []
     ) {
         self.hunger = hunger; self.mood = mood; self.cleanliness = cleanliness; self.energy = energy
         self.intelligence = intelligence; self.strength = strength; self.charm = charm; self.creativity = creativity; self.courage = courage
         self.kindergartenXP = kindergartenXP; self.completedEvents = completedEvents; self.primaryXP = primaryXP; self.completedPrimaryEvents = completedPrimaryEvents; self.rewards = rewards
         self.equippedAccessory = equippedAccessory; self.placedFurniture = placedFurniture; self.schoolStage = schoolStage
+        self.lastStudyDay = lastStudyDay; self.studyCountOnLastStudyDay = studyCountOnLastStudyDay; self.weeklyStudyStampCount = weeklyStudyStampCount; self.weeklyGrowthWeekID = weeklyGrowthWeekID
+        self.claimedWeeklyGrowthMilestones = claimedWeeklyGrowthMilestones; self.announcedWeeklyGrowthMilestones = announcedWeeklyGrowthMilestones; self.weeklyGrowthJournal = weeklyGrowthJournal
     }
 
     private enum CodingKeys: String, CodingKey {
         case hunger, mood, cleanliness, energy, intelligence, strength, charm, creativity, courage
         case kindergartenXP, completedEvents, primaryXP, completedPrimaryEvents, rewards, equippedAccessory, placedFurniture, schoolStage
+        case lastStudyDay, studyCountOnLastStudyDay, weeklyStudyStampCount, weeklyGrowthWeekID, claimedWeeklyGrowthMilestones, announcedWeeklyGrowthMilestones, weeklyGrowthJournal
     }
 
     init(from decoder: Decoder) throws {
@@ -137,7 +153,14 @@ struct PetProfile: Codable, Equatable {
             rewards: try c.decodeIfPresent(Set<String>.self, forKey: .rewards) ?? [],
             equippedAccessory: try c.decodeIfPresent(String.self, forKey: .equippedAccessory),
             placedFurniture: try c.decodeIfPresent(Set<String>.self, forKey: .placedFurniture) ?? [],
-            schoolStage: try c.decodeIfPresent(SchoolStage.self, forKey: .schoolStage) ?? .kindergarten
+            schoolStage: try c.decodeIfPresent(SchoolStage.self, forKey: .schoolStage) ?? .kindergarten,
+            lastStudyDay: try c.decodeIfPresent(String.self, forKey: .lastStudyDay),
+            studyCountOnLastStudyDay: try c.decodeIfPresent(Int.self, forKey: .studyCountOnLastStudyDay) ?? 0,
+            weeklyStudyStampCount: try c.decodeIfPresent(Int.self, forKey: .weeklyStudyStampCount) ?? 0,
+            weeklyGrowthWeekID: try c.decodeIfPresent(String.self, forKey: .weeklyGrowthWeekID),
+            claimedWeeklyGrowthMilestones: try c.decodeIfPresent(Set<WeeklyGrowthMilestone>.self, forKey: .claimedWeeklyGrowthMilestones) ?? [],
+            announcedWeeklyGrowthMilestones: try c.decodeIfPresent(Set<WeeklyGrowthMilestone>.self, forKey: .announcedWeeklyGrowthMilestones) ?? [],
+            weeklyGrowthJournal: try c.decodeIfPresent([String].self, forKey: .weeklyGrowthJournal) ?? []
         )
     }
 
@@ -147,6 +170,20 @@ struct PetProfile: Codable, Equatable {
 
     var isPrimarySchoolComplete: Bool {
         schoolStage == .primarySchool && primaryXP >= 120 && completedPrimaryEvents == Set(PrimaryEvent.allCases)
+    }
+
+    mutating func normalizeWeeklyStudyProgress(for period: StudyPeriod) {
+        if weeklyGrowthWeekID != period.weekID {
+            weeklyGrowthWeekID = period.weekID
+            weeklyStudyStampCount = 0
+            claimedWeeklyGrowthMilestones = []
+            announcedWeeklyGrowthMilestones = []
+            weeklyGrowthJournal = []
+        }
+        if lastStudyDay != period.dayID {
+            lastStudyDay = period.dayID
+            studyCountOnLastStudyDay = 0
+        }
     }
 
 }
@@ -251,6 +288,59 @@ enum PetReducer {
                 next.energy = next.energy.changed(by: -9)
             }
             next.primaryXP += 10
+        case .datedCourseCompleted(let course, let period):
+            next.normalizeWeeklyStudyProgress(for: period)
+            let count = next.studyCountOnLastStudyDay
+            switch course {
+            case .literacy:
+                next.intelligence = next.intelligence.changed(by: WeeklyStudyRule.scaled(8, completedCourses: count))
+                next.creativity = next.creativity.changed(by: WeeklyStudyRule.scaled(4, completedCourses: count))
+                next.energy = next.energy.changed(by: -WeeklyStudyRule.scaled(8, completedCourses: count))
+                next.kindergartenXP += WeeklyStudyRule.scaled(10, completedCourses: count)
+            case .jumping:
+                next.strength = next.strength.changed(by: WeeklyStudyRule.scaled(8, completedCourses: count))
+                next.courage = next.courage.changed(by: WeeklyStudyRule.scaled(4, completedCourses: count))
+                next.energy = next.energy.changed(by: -WeeklyStudyRule.scaled(10, completedCourses: count))
+                next.kindergartenXP += WeeklyStudyRule.scaled(10, completedCourses: count)
+            case .stage:
+                next.charm = next.charm.changed(by: WeeklyStudyRule.scaled(8, completedCourses: count))
+                next.courage = next.courage.changed(by: WeeklyStudyRule.scaled(3, completedCourses: count))
+                next.energy = next.energy.changed(by: -WeeklyStudyRule.scaled(7, completedCourses: count))
+                next.kindergartenXP += WeeklyStudyRule.scaled(10, completedCourses: count)
+            }
+            next.studyCountOnLastStudyDay += 1
+            next.weeklyStudyStampCount = min(10, next.weeklyStudyStampCount + 1)
+        case .datedPrimaryCourseCompleted(let course, let period):
+            guard next.schoolStage == .primarySchool else { return next }
+            next.normalizeWeeklyStudyProgress(for: period)
+            let count = next.studyCountOnLastStudyDay
+            switch course {
+            case .reading:
+                next.intelligence = next.intelligence.changed(by: WeeklyStudyRule.scaled(7, completedCourses: count))
+                next.creativity = next.creativity.changed(by: WeeklyStudyRule.scaled(3, completedCourses: count))
+                next.energy = next.energy.changed(by: -WeeklyStudyRule.scaled(7, completedCourses: count))
+            case .science:
+                next.intelligence = next.intelligence.changed(by: WeeklyStudyRule.scaled(5, completedCourses: count))
+                next.courage = next.courage.changed(by: WeeklyStudyRule.scaled(4, completedCourses: count))
+                next.energy = next.energy.changed(by: -WeeklyStudyRule.scaled(8, completedCourses: count))
+            case .sportsClub:
+                next.strength = next.strength.changed(by: WeeklyStudyRule.scaled(7, completedCourses: count))
+                next.charm = next.charm.changed(by: WeeklyStudyRule.scaled(3, completedCourses: count))
+                next.energy = next.energy.changed(by: -WeeklyStudyRule.scaled(9, completedCourses: count))
+            }
+            next.primaryXP += WeeklyStudyRule.scaled(10, completedCourses: count)
+            next.studyCountOnLastStudyDay += 1
+            next.weeklyStudyStampCount = min(10, next.weeklyStudyStampCount + 1)
+        case .weeklyGrowthClaimed(let milestone, let period):
+            next.normalizeWeeklyStudyProgress(for: period)
+            guard next.weeklyStudyStampCount >= milestone.requiredStamps, !next.claimedWeeklyGrowthMilestones.contains(milestone) else { return next }
+            let content = milestone.content(for: next.schoolStage)
+            next.claimedWeeklyGrowthMilestones.insert(milestone)
+            next.weeklyGrowthJournal.append(content.journal)
+            next.rewards.insert(content.rewardName)
+        case .weeklyGrowthPromptAcknowledged(let milestone, let period):
+            next.normalizeWeeklyStudyProgress(for: period)
+            next.announcedWeeklyGrowthMilestones.insert(milestone)
         }
         return next
     }
