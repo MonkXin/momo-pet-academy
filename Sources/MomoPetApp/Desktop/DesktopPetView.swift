@@ -66,6 +66,9 @@ struct DesktopPetView: View {
             guard feedback == nil, let prompt = presentation.prompt else { return }
             showFeedback(prompt)
         }
+        .onChange(of: store.profile) { _ in
+            showWeeklyGrowthPromptIfNeeded()
+        }
         .onDisappear {
             clearFeedbackWorkItem?.cancel()
             clearFeedbackWorkItem = nil
@@ -111,11 +114,20 @@ struct DesktopPetView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + nextFeedback.duration, execute: cleanup)
     }
 
+    private func showWeeklyGrowthPromptIfNeeded() {
+        guard feedback == nil,
+              let milestone = store.profile.nextWeeklyGrowthMilestone,
+              !store.profile.announcedWeeklyGrowthMilestones.contains(milestone) else { return }
+        let period = StudyPeriod.current()
+        store.dispatch(.weeklyGrowthPromptAcknowledged(milestone, period: period))
+        showFeedback(.study)
+    }
+
     @ViewBuilder
     private func feedbackOverlay(_ feedback: DesktopPetFeedback) -> some View {
-        Image(systemName: feedback == .heart ? "heart" : feedback == .carrot ? "carrot.fill" : "zzz")
+        Image(systemName: feedback == .heart ? "heart" : feedback == .carrot ? "carrot.fill" : feedback == .rest ? "zzz" : "book.closed.fill")
             .font(.system(size: feedback == .heart ? 42 : 32, weight: .medium))
-            .foregroundStyle(feedback == .heart ? Color.pink : feedback == .carrot ? Color.orange : Color.blue)
+            .foregroundStyle(feedback == .heart ? Color.pink : feedback == .carrot ? Color.orange : feedback == .rest ? Color.blue : Color.purple)
             .offset(feedbackOffset(for: feedback))
             .opacity(feedbackAtRest ? 0 : 1)
             .allowsHitTesting(false)
@@ -129,6 +141,8 @@ struct DesktopPetView: View {
             return CGSize(width: feedbackAtRest ? 2 : 84, height: 32)
         case .rest:
             return CGSize(width: 46, height: feedbackAtRest ? -48 : -18)
+        case .study:
+            return CGSize(width: 46, height: -42)
         }
     }
 }

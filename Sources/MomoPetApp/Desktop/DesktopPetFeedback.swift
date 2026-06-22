@@ -4,8 +4,9 @@ enum DesktopPetFeedback: Equatable {
     case heart
     case carrot
     case rest
+    case study
 
-    var duration: TimeInterval { 0.8 }
+    var duration: TimeInterval { self == .study ? 1.2 : 0.8 }
 
     var pose: DesktopPetPose {
         switch self {
@@ -15,6 +16,8 @@ enum DesktopPetFeedback: Equatable {
             return .fed
         case .rest:
             return .resting
+        case .study:
+            return .idle
         }
     }
 
@@ -26,6 +29,8 @@ enum DesktopPetFeedback: Equatable {
             return .carrot
         case .rested:
             return .rest
+        case .weeklyGrowthPromptAcknowledged:
+            return .study
         default:
             return nil
         }

@@ -100,6 +100,7 @@ private struct AcademyView: View {
                 eventCard
                 Text("今日课程").font(.headline)
                 courseRow
+                WeeklyGrowthCard()
                 HStack {
                     Button("喂食") { store.dispatch(.fed) }
                     Button("摸摸") { store.dispatch(.petted) }
@@ -188,13 +189,13 @@ private struct AcademyView: View {
     private var courseRow: some View {
         HStack {
             if store.profile.schoolStage == .primarySchool {
-                CourseButton(title: "阅读课", icon: "book.closed", color: .blue) { store.dispatch(.primaryCourseCompleted(.reading)) }
-                CourseButton(title: "科学观察", icon: "magnifyingglass", color: .purple) { store.dispatch(.primaryCourseCompleted(.science)) }
-                CourseButton(title: "运动社团", icon: "figure.run", color: .orange) { store.dispatch(.primaryCourseCompleted(.sportsClub)) }
+                CourseButton(title: "阅读课", icon: "book.closed", color: .blue) { store.dispatch(.datedPrimaryCourseCompleted(.reading, period: .current())) }
+                CourseButton(title: "科学观察", icon: "magnifyingglass", color: .purple) { store.dispatch(.datedPrimaryCourseCompleted(.science, period: .current())) }
+                CourseButton(title: "运动社团", icon: "figure.run", color: .orange) { store.dispatch(.datedPrimaryCourseCompleted(.sportsClub, period: .current())) }
             } else {
-                CourseButton(title: "识字小课", icon: "character.book.closed", color: .blue) { store.dispatch(.courseCompleted(.literacy)) }
-                CourseButton(title: "跳跳训练", icon: "figure.jump", color: .orange) { store.dispatch(.courseCompleted(.jumping)) }
-                CourseButton(title: "小小舞台", icon: "theatermasks", color: .pink) { store.dispatch(.courseCompleted(.stage)) }
+                CourseButton(title: "识字小课", icon: "character.book.closed", color: .blue) { store.dispatch(.datedCourseCompleted(.literacy, period: .current())) }
+                CourseButton(title: "跳跳训练", icon: "figure.jump", color: .orange) { store.dispatch(.datedCourseCompleted(.jumping, period: .current())) }
+                CourseButton(title: "小小舞台", icon: "theatermasks", color: .pink) { store.dispatch(.datedCourseCompleted(.stage, period: .current())) }
             }
         }
     }
