@@ -51,7 +51,10 @@ struct DesktopPetView: View {
                 store.dispatch(.fed)
                 showFeedback(for: .fed)
             }
-            Button("休息") { store.dispatch(.rested) }
+            Button("休息") {
+                store.dispatch(.rested)
+                showFeedback(for: .rested)
+            }
             Divider()
             Button("打开学堂", action: openAcademy)
             Button("退出", action: quit)
@@ -110,9 +113,9 @@ struct DesktopPetView: View {
 
     @ViewBuilder
     private func feedbackOverlay(_ feedback: DesktopPetFeedback) -> some View {
-        Image(systemName: feedback == .heart ? "heart" : "carrot.fill")
+        Image(systemName: feedback == .heart ? "heart" : feedback == .carrot ? "carrot.fill" : "zzz")
             .font(.system(size: feedback == .heart ? 42 : 32, weight: .medium))
-            .foregroundStyle(feedback == .heart ? Color.pink : Color.orange)
+            .foregroundStyle(feedback == .heart ? Color.pink : feedback == .carrot ? Color.orange : Color.blue)
             .offset(feedbackOffset(for: feedback))
             .opacity(feedbackAtRest ? 0 : 1)
             .allowsHitTesting(false)
@@ -124,6 +127,8 @@ struct DesktopPetView: View {
             return CGSize(width: 0, height: feedbackAtRest ? -78 : -22)
         case .carrot:
             return CGSize(width: feedbackAtRest ? 2 : 84, height: 32)
+        case .rest:
+            return CGSize(width: 46, height: feedbackAtRest ? -48 : -18)
         }
     }
 }

@@ -10,8 +10,8 @@ final class DesktopPetFeedbackTests: XCTestCase {
         XCTAssertEqual(DesktopPetFeedback.forEvent(.fed), .carrot)
     }
 
-    func testRestActionDoesNotShowTransientFeedback() {
-        XCTAssertNil(DesktopPetFeedback.forEvent(.rested))
+    func testRestActionShowsRestFeedback() {
+        XCTAssertEqual(DesktopPetFeedback.forEvent(.rested), .rest)
     }
 
     func testFeedbackHasShortFixedDurations() {
@@ -22,5 +22,9 @@ final class DesktopPetFeedbackTests: XCTestCase {
     func testFeedbackSelectsMatchingOptionalPose() {
         XCTAssertEqual(DesktopPetFeedback.heart.pose, .petted)
         XCTAssertEqual(DesktopPetFeedback.carrot.pose, .fed)
+    }
+
+    func testRestFeedbackUsesRestingPose() {
+        XCTAssertEqual(DesktopPetFeedback.rest.pose, .resting)
     }
 }
