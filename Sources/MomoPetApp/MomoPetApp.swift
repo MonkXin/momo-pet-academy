@@ -76,7 +76,6 @@ struct MomoPetApp: App {
 
 private struct AcademyView: View {
     @EnvironmentObject private var store: PetStore
-    @State private var showingStarCatch = false
     @State private var showingRoom = false
     @State private var panelMode: PetPanelMode = .academy
     @State private var desktopPetIsVisible = false
@@ -106,7 +105,6 @@ private struct AcademyView: View {
                     Button("摸摸") { store.dispatch(.petted) }
                     Button("清洁") { store.dispatch(.cleaned) }
                     Button("休息") { store.dispatch(.rested) }
-                    Button("玩小游戏") { showingStarCatch = true }
                     Button("小屋") { showingRoom = true }
                     Button("收起为桌宠") {
                         let academyWindow = NSApp.keyWindow
@@ -137,11 +135,6 @@ private struct AcademyView: View {
         .background(Color(red: 1.0, green: 0.97, blue: 0.89))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
-        .sheet(isPresented: $showingStarCatch) {
-            StarCatchView {
-                store.dispatch(.miniGameCompleted(.starCatch, won: true))
-            }
-        }
         .sheet(isPresented: $showingRoom) {
             RoomView()
                 .environmentObject(store)
