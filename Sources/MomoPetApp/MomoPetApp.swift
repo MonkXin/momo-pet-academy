@@ -9,6 +9,7 @@ enum DesktopPetPose: String {
     case idle = "momo-rabbit-desktop-idle"
     case petted = "momo-rabbit-desktop-petted"
     case fed = "momo-rabbit-desktop-fed"
+    case resting = "momo-rabbit-desktop-resting"
 }
 
 enum PetVisualAsset {

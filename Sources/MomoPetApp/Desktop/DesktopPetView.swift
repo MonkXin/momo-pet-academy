@@ -16,11 +16,16 @@ struct DesktopPetView: View {
     @State private var feedback: DesktopPetFeedback?
     @State private var feedbackAtRest = false
     @State private var clearFeedbackWorkItem: DispatchWorkItem?
+    @State private var displayedStatePrompt: DesktopPetFeedback?
+
+    private var statePresentation: DesktopPetStatePresentation {
+        DesktopPetStatePresentation.forActivity(PetActivity.current(for: store.profile))
+    }
 
     var body: some View {
         ZStack {
             Group {
-                if let image = PetVisualAsset.desktopPetImage(for: feedback?.pose ?? .idle) {
+                if let image = PetVisualAsset.desktopPetImage(for: feedback?.pose ?? statePresentation.pose) {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFit()
@@ -52,6 +57,12 @@ struct DesktopPetView: View {
             Button("退出", action: quit)
         }
         .accessibilityLabel("小白桌宠")
+        .onChange(of: statePresentation) { presentation in
+            guard presentation.prompt != displayedStatePrompt else { return }
+            displayedStatePrompt = presentation.prompt
+            guard feedback == nil, let prompt = presentation.prompt else { return }
+            showFeedback(prompt)
+        }
         .onDisappear {
             clearFeedbackWorkItem?.cancel()
             clearFeedbackWorkItem = nil
@@ -71,6 +82,10 @@ struct DesktopPetView: View {
 
     private func showFeedback(for event: PetEvent) {
         guard let nextFeedback = DesktopPetFeedback.forEvent(event) else { return }
+        showFeedback(nextFeedback)
+    }
+
+    private func showFeedback(_ nextFeedback: DesktopPetFeedback) {
 
         clearFeedbackWorkItem?.cancel()
         feedback = nextFeedback
