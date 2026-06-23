@@ -78,8 +78,9 @@ private struct AcademyView: View {
     @EnvironmentObject private var store: PetStore
     @State private var showingRoom = false
     @State private var panelMode: PetPanelMode = .academy
-    @State private var desktopPetIsVisible = false
+    @State private var desktopPetIsVisible = true
     @State private var courseFeedback: String?
+    @State private var startupHandled = false
 
     var body: some View {
         Group {
@@ -128,6 +129,21 @@ private struct AcademyView: View {
         .sheet(isPresented: $showingRoom) {
             RoomView()
                 .environmentObject(store)
+        }
+        .onAppear(perform: showDesktopPetOnStartup)
+    }
+
+    private func showDesktopPetOnStartup() {
+        guard !startupHandled else { return }
+        startupHandled = true
+        DispatchQueue.main.async {
+            let academyWindow = NSApp.windows.first { $0.title == AppMetadata.name }
+            DesktopPetWindowController.shared.show(store: store) {
+                desktopPetIsVisible = false
+                academyWindow?.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            academyWindow?.orderOut(nil)
         }
     }
 
