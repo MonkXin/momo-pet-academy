@@ -97,7 +97,6 @@ private struct AcademyView: View {
                 Text("幼儿园  →  小学  →  中学  →  学院  →  毕业旅行")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                academyActions
                 statGrid
                 eventCard
                 Text("今日课程").font(.headline)
@@ -130,17 +129,6 @@ private struct AcademyView: View {
 
     private var academyActions: some View {
         HStack(spacing: 8) {
-            Button("收起为桌宠") {
-                let academyWindow = NSApp.keyWindow
-                desktopPetIsVisible = true
-                DesktopPetWindowController.shared.show(store: store) {
-                    desktopPetIsVisible = false
-                    academyWindow?.makeKeyAndOrderFront(nil)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-                academyWindow?.orderOut(nil)
-            }
-            .buttonStyle(.borderedProminent)
             Menu("照料") {
                 Button("喂食") { store.dispatch(.fed) }
                 Button("摸摸") { store.dispatch(.petted) }
@@ -159,6 +147,20 @@ private struct AcademyView: View {
         .controlSize(.small)
     }
 
+    private var desktopPetButton: some View {
+        Button("收起为桌宠") {
+            let academyWindow = NSApp.keyWindow
+            desktopPetIsVisible = true
+            DesktopPetWindowController.shared.show(store: store) {
+                desktopPetIsVisible = false
+                academyWindow?.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            academyWindow?.orderOut(nil)
+        }
+        .buttonStyle(.borderedProminent)
+    }
+
     private var rabbitCard: some View {
         VStack(spacing: 10) {
             RabbitPortraitView(profile: store.profile, size: 235)
@@ -169,6 +171,8 @@ private struct AcademyView: View {
                 .font(.caption).foregroundColor(.blue)
             Text("饱食 \(store.profile.hunger.value)  ·  心情 \(store.profile.mood.value)  ·  精力 \(store.profile.energy.value)")
                 .font(.caption).foregroundColor(.secondary).multilineTextAlignment(.center)
+            desktopPetButton
+            academyActions
         }
         .frame(width: 245)
     }
@@ -200,6 +204,7 @@ private struct AcademyView: View {
             StatRow(name: "创造力", value: store.profile.creativity.value, tint: .purple)
             StatRow(name: "勇气", value: store.profile.courage.value, tint: .green)
         }
+        .environment(\.controlActiveState, .active)
     }
 
     @ViewBuilder
