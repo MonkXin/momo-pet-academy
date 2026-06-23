@@ -97,6 +97,7 @@ private struct AcademyView: View {
                 Text("幼儿园  →  小学  →  中学  →  学院  →  毕业旅行")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                academyActions
                 statGrid
                 eventCard
                 Text("今日课程").font(.headline)
@@ -111,31 +112,6 @@ private struct AcademyView: View {
                         .foregroundColor(.secondary)
                 }
                 WeeklyGrowthCard()
-                HStack {
-                    Button("喂食") { store.dispatch(.fed) }
-                    Button("摸摸") { store.dispatch(.petted) }
-                    Button("清洁") { store.dispatch(.cleaned) }
-                    Button("休息") { store.dispatch(.rested) }
-                    Button("小屋") { showingRoom = true }
-                    Button("收起为桌宠") {
-                        let academyWindow = NSApp.keyWindow
-                        desktopPetIsVisible = true
-                        DesktopPetWindowController.shared.show(store: store) {
-                            desktopPetIsVisible = false
-                            academyWindow?.makeKeyAndOrderFront(nil)
-                            NSApp.activate(ignoringOtherApps: true)
-                        }
-                        academyWindow?.orderOut(nil)
-                    }
-                    if !store.profile.rewards.isEmpty {
-                        Menu("衣橱") {
-                            ForEach(store.profile.rewards.sorted(), id: \.self) { accessory in
-                                Button(accessory) { store.dispatch(.accessoryEquipped(accessory)) }
-                            }
-                        }
-                    }
-                }
-                .buttonStyle(.bordered)
                 }
             }
         }
@@ -150,6 +126,37 @@ private struct AcademyView: View {
             RoomView()
                 .environmentObject(store)
         }
+    }
+
+    private var academyActions: some View {
+        HStack(spacing: 8) {
+            Button("收起为桌宠") {
+                let academyWindow = NSApp.keyWindow
+                desktopPetIsVisible = true
+                DesktopPetWindowController.shared.show(store: store) {
+                    desktopPetIsVisible = false
+                    academyWindow?.makeKeyAndOrderFront(nil)
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+                academyWindow?.orderOut(nil)
+            }
+            .buttonStyle(.borderedProminent)
+            Menu("照料") {
+                Button("喂食") { store.dispatch(.fed) }
+                Button("摸摸") { store.dispatch(.petted) }
+                Button("清洁") { store.dispatch(.cleaned) }
+                Button("休息") { store.dispatch(.rested) }
+            }
+            Button("小屋") { showingRoom = true }
+            if !store.profile.rewards.isEmpty {
+                Menu("衣橱") {
+                    ForEach(store.profile.rewards.sorted(), id: \.self) { accessory in
+                        Button(accessory) { store.dispatch(.accessoryEquipped(accessory)) }
+                    }
+                }
+            }
+        }
+        .controlSize(.small)
     }
 
     private var rabbitCard: some View {
@@ -432,6 +439,8 @@ private struct FloatingPetWindowConfigurator: NSViewRepresentable {
             window.backgroundColor = .clear
             window.isMovableByWindowBackground = true
             window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
         }
         return view
     }
@@ -455,7 +464,18 @@ private struct CourseButton: View {
     let color: Color
     let action: () -> Void
     var body: some View {
-        Button(action: action) { VStack(spacing: 4) { Image(systemName: icon).font(.title3); Text(title).font(.subheadline.bold()); Text(benefit).font(.caption2); Text("点击上课").font(.caption2.bold()) }.frame(width: 150, height: 92) }
-            .buttonStyle(.borderedProminent).tint(color)
+        Button(action: action) {
+            VStack(spacing: 3) {
+                Image(systemName: icon).font(.title3)
+                Text(title).font(.subheadline.bold())
+                Text(benefit).font(.caption2)
+                Text("点击上课").font(.caption2.bold())
+            }
+            .frame(maxWidth: .infinity, minHeight: 88)
+            .foregroundColor(.white)
+            .background(color, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .frame(width: 155)
     }
 }
