@@ -38,17 +38,17 @@ enum WeeklyGrowthMilestone: String, Codable, CaseIterable, Hashable {
     func content(for stage: SchoolStage) -> WeeklyGrowthContent {
         switch (stage, self) {
         case (.kindergarten, .attentive):
-            return .init(title: "认真听讲", journal: "老师送给小白一张认真小贴纸。", rewardName: "认真小贴纸")
+            return .init(title: "认真听讲", journal: "老师送给奶茶一张认真小贴纸。", rewardName: "认真小贴纸")
         case (.kindergarten, .explorer):
-            return .init(title: "课间探索", journal: "小白在课间发现了彩虹积木角。", rewardName: "彩虹积木")
+            return .init(title: "课间探索", journal: "奶茶在课间发现了彩虹积木角。", rewardName: "彩虹积木")
         case (.kindergarten, .star):
-            return .init(title: "本周小明星", journal: "小白拿到了幼儿园小明星徽章。", rewardName: "小明星徽章")
+            return .init(title: "本周小明星", journal: "奶茶拿到了幼儿园小明星徽章。", rewardName: "小明星徽章")
         case (.primarySchool, .attentive):
-            return .init(title: "认真听讲", journal: "班主任把班级小贴纸贴进了小白的成长册。", rewardName: "班级小贴纸")
+            return .init(title: "认真听讲", journal: "班主任把班级小贴纸贴进了奶茶的成长册。", rewardName: "班级小贴纸")
         case (.primarySchool, .explorer):
-            return .init(title: "课间探索", journal: "小白在图书角找到了一盏小阅读灯。", rewardName: "小阅读灯")
+            return .init(title: "课间探索", journal: "奶茶在图书角找到了一盏小阅读灯。", rewardName: "小阅读灯")
         case (.primarySchool, .star):
-            return .init(title: "本周小明星", journal: "小白收到了一枚校园小明星别针。", rewardName: "校园小明星别针")
+            return .init(title: "本周小明星", journal: "奶茶收到了一枚校园小明星别针。", rewardName: "校园小明星别针")
         }
     }
 }

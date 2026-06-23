@@ -59,7 +59,7 @@ struct DesktopPetView: View {
             Button("打开学堂", action: openAcademy)
             Button("退出", action: quit)
         }
-        .accessibilityLabel("小白桌宠")
+        .accessibilityLabel("奶茶桌宠")
         .onChange(of: statePresentation) { presentation in
             guard presentation.prompt != displayedStatePrompt else { return }
             displayedStatePrompt = presentation.prompt

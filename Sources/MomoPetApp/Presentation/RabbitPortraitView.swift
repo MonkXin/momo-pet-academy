@@ -10,7 +10,7 @@ enum RabbitPortraitCopy {
         case .hungry: description = "肚子咕咕叫"
         case .lonely: description = "想要摸摸"
         }
-        return "小白的 3D 形象，当前：\(description)"
+        return "奶茶的 3D 形象，当前：\(description)"
     }
 }
 

@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 enum AppMetadata {
-    static let name = "小白的学堂时光"
+    static let name = "奶茶的学堂时光"
 }
 
 enum DesktopPetPose: String {
@@ -181,7 +181,7 @@ private struct AcademyView: View {
                         .padding(10)
                 }
             }
-            Text("小白 · \(activityTitle)").font(.headline)
+            Text("奶茶 · \(activityTitle)").font(.headline)
             Text(store.profile.equippedAccessory ?? "还没有佩戴配饰")
                 .font(.caption).foregroundColor(.blue)
             Text("饱食 \(store.profile.hunger.value)  ·  心情 \(store.profile.mood.value)  ·  精力 \(store.profile.energy.value)")
@@ -305,7 +305,7 @@ private struct AcademyView: View {
                 Text("🎒").font(.title)
                 VStack(alignment: .leading) {
                     Text("小学结业啦！").font(.headline)
-                    Text("中学内容筹备中，先带着小白享受校园时光吧。")
+                    Text("中学内容筹备中，先带着奶茶享受校园时光吧。")
                         .font(.caption).foregroundColor(.secondary)
                 }
                 Spacer()
@@ -347,7 +347,7 @@ private struct RoomView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            HStack { Text("小白的小屋").font(.title2.bold()); Spacer(); Button("完成") { dismiss() } }
+            HStack { Text("奶茶的小屋").font(.title2.bold()); Spacer(); Button("完成") { dismiss() } }
             ZStack(alignment: .bottom) {
                 RoundedRectangle(cornerRadius: 24).fill(Color(red: 0.87, green: 0.79, blue: 0.65))
                 VStack {
@@ -459,7 +459,7 @@ private struct StarCatchView: View {
     var body: some View {
         VStack(spacing: 22) {
             Text("接星星").font(.title.bold())
-            Text(caught ? "小白接住星星啦！心情 +8，成长经验 +5" : "在星星落地前点一下它！")
+            Text(caught ? "奶茶接住星星啦！心情 +8，成长经验 +5" : "在星星落地前点一下它！")
                 .foregroundColor(.secondary)
             Button {
                 guard !caught else { return }

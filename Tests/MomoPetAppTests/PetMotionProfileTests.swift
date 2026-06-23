@@ -17,7 +17,7 @@ final class PetMotionProfileTests: XCTestCase {
     func testPortraitAccessibilityDescribesTheCurrentActivity() {
         XCTAssertEqual(
             RabbitPortraitCopy.accessibilityLabel(for: .napping),
-            "小白的 3D 形象，当前：午睡中"
+            "奶茶的 3D 形象，当前：午睡中"
         )
     }
 }
