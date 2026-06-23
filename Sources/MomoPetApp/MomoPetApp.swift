@@ -79,6 +79,7 @@ private struct AcademyView: View {
     @State private var showingRoom = false
     @State private var panelMode: PetPanelMode = .academy
     @State private var desktopPetIsVisible = false
+    @State private var courseFeedback: String?
 
     var body: some View {
         Group {
@@ -100,6 +101,15 @@ private struct AcademyView: View {
                 eventCard
                 Text("今日课程").font(.headline)
                 courseRow
+                if let courseFeedback {
+                    Label(courseFeedback, systemImage: "checkmark.seal.fill")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                } else {
+                    Text("点击任意课程开始上课，完成后获得学习印记。")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 WeeklyGrowthCard()
                 HStack {
                     Button("喂食") { store.dispatch(.fed) }
@@ -189,15 +199,25 @@ private struct AcademyView: View {
     private var courseRow: some View {
         HStack {
             if store.profile.schoolStage == .primarySchool {
-                CourseButton(title: "阅读课", icon: "book.closed", color: .blue) { store.dispatch(.datedPrimaryCourseCompleted(.reading, period: .current())) }
-                CourseButton(title: "科学观察", icon: "magnifyingglass", color: .purple) { store.dispatch(.datedPrimaryCourseCompleted(.science, period: .current())) }
-                CourseButton(title: "运动社团", icon: "figure.run", color: .orange) { store.dispatch(.datedPrimaryCourseCompleted(.sportsClub, period: .current())) }
+                CourseButton(title: "阅读课", benefit: "智力 +7 · 创造力 +3", icon: "book.closed", color: .blue) { completePrimaryCourse(.reading, feedback: "阅读课完成：获得 1 枚学习印记") }
+                CourseButton(title: "科学观察", benefit: "智力 +5 · 勇气 +4", icon: "magnifyingglass", color: .purple) { completePrimaryCourse(.science, feedback: "科学观察完成：获得 1 枚学习印记") }
+                CourseButton(title: "运动社团", benefit: "武力 +7 · 魅力 +3", icon: "figure.run", color: .orange) { completePrimaryCourse(.sportsClub, feedback: "运动社团完成：获得 1 枚学习印记") }
             } else {
-                CourseButton(title: "识字小课", icon: "character.book.closed", color: .blue) { store.dispatch(.datedCourseCompleted(.literacy, period: .current())) }
-                CourseButton(title: "跳跳训练", icon: "figure.jump", color: .orange) { store.dispatch(.datedCourseCompleted(.jumping, period: .current())) }
-                CourseButton(title: "小小舞台", icon: "theatermasks", color: .pink) { store.dispatch(.datedCourseCompleted(.stage, period: .current())) }
+                CourseButton(title: "识字小课", benefit: "智力 +8 · 创造力 +4", icon: "character.book.closed", color: .blue) { completeCourse(.literacy, feedback: "识字小课完成：获得 1 枚学习印记") }
+                CourseButton(title: "跳跳训练", benefit: "武力 +8 · 勇气 +4", icon: "figure.jump", color: .orange) { completeCourse(.jumping, feedback: "跳跳训练完成：获得 1 枚学习印记") }
+                CourseButton(title: "小小舞台", benefit: "魅力 +8 · 勇气 +3", icon: "theatermasks", color: .pink) { completeCourse(.stage, feedback: "小小舞台完成：获得 1 枚学习印记") }
             }
         }
+    }
+
+    private func completeCourse(_ course: Course, feedback: String) {
+        store.dispatch(.datedCourseCompleted(course, period: .current()))
+        courseFeedback = feedback
+    }
+
+    private func completePrimaryCourse(_ course: PrimaryCourse, feedback: String) {
+        store.dispatch(.datedPrimaryCourseCompleted(course, period: .current()))
+        courseFeedback = feedback
     }
 
     @ViewBuilder
@@ -430,11 +450,12 @@ private struct StatRow: View {
 
 private struct CourseButton: View {
     let title: String
+    let benefit: String
     let icon: String
     let color: Color
     let action: () -> Void
     var body: some View {
-        Button(action: action) { VStack(spacing: 7) { Image(systemName: icon).font(.title2); Text(title).font(.caption.bold()) }.frame(width: 105, height: 78) }
+        Button(action: action) { VStack(spacing: 4) { Image(systemName: icon).font(.title3); Text(title).font(.subheadline.bold()); Text(benefit).font(.caption2); Text("点击上课").font(.caption2.bold()) }.frame(width: 150, height: 92) }
             .buttonStyle(.borderedProminent).tint(color)
     }
 }
