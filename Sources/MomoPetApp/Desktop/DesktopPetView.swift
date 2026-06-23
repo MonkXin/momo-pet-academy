@@ -17,6 +17,7 @@ struct DesktopPetView: View {
     @State private var feedbackAtRest = false
     @State private var clearFeedbackWorkItem: DispatchWorkItem?
     @State private var displayedStatePrompt: DesktopPetFeedback?
+    @AppStorage("milkteaHasSeenDesktopPetHint") private var hasSeenDesktopPetHint = false
 
     private var statePresentation: DesktopPetStatePresentation {
         DesktopPetStatePresentation.forActivity(PetActivity.current(for: store.profile))
@@ -38,6 +39,16 @@ struct DesktopPetView: View {
 
             if let feedback {
                 feedbackOverlay(feedback)
+            }
+
+            if !hasSeenDesktopPetHint {
+                Text("双击奶茶打开学堂\n右键可照料或退出")
+                    .font(.caption.bold())
+                    .multilineTextAlignment(.center)
+                    .padding(8)
+                    .background(.white.opacity(0.9), in: RoundedRectangle(cornerRadius: 10))
+                    .offset(y: -110)
+                    .allowsHitTesting(false)
             }
         }
         .contentShape(Rectangle())
@@ -79,9 +90,11 @@ struct DesktopPetView: View {
     private func perform(_ intent: DesktopPetTapIntent) {
         switch intent {
         case .pet:
+            hasSeenDesktopPetHint = true
             store.dispatch(.petted)
             showFeedback(for: .petted)
         case .openAcademy:
+            hasSeenDesktopPetHint = true
             openAcademy()
         }
     }
