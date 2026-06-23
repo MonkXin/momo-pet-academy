@@ -86,32 +86,36 @@ private struct AcademyView: View {
         if desktopPetIsVisible {
             Color.clear
         } else {
-        HStack(spacing: 20) {
+        HStack(alignment: .top, spacing: 20) {
             if panelMode == .compact {
                 compactPet
             } else {
                 rabbitCard
-                VStack(alignment: .leading, spacing: 14) {
-                Text("学堂成长 · \(store.profile.schoolStage == .kindergarten ? "幼儿园" : "小学")")
-                    .font(.title2.bold())
-                Text("幼儿园  →  小学  →  中学  →  学院  →  毕业旅行")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                statGrid
-                eventCard
-                Text("今日课程").font(.headline)
-                courseRow
-                if let courseFeedback {
-                    Label(courseFeedback, systemImage: "checkmark.seal.fill")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                } else {
-                    Text("点击任意课程开始上课，完成后获得学习印记。")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("学堂成长 · \(store.profile.schoolStage == .kindergarten ? "幼儿园" : "小学")")
+                            .font(.title2.bold())
+                        Text("幼儿园  →  小学  →  中学  →  学院  →  毕业旅行")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        statGrid
+                        eventCard
+                        Text("今日课程").font(.headline)
+                        courseRow
+                        if let courseFeedback {
+                            Label(courseFeedback, systemImage: "checkmark.seal.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        } else {
+                            Text("点击任意课程开始上课，完成后获得学习印记。")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        WeeklyGrowthCard()
+                    }
+                    .padding(.trailing, 8)
                 }
-                WeeklyGrowthCard()
-                }
+                .frame(maxHeight: .infinity, alignment: .top)
             }
         }
         }
