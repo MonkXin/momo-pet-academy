@@ -336,6 +336,7 @@ private struct AcademyView: View {
 private struct RoomView: View {
     @EnvironmentObject private var store: PetStore
     @Environment(\.dismiss) private var dismiss
+    @State private var roomFeedback: String?
 
     private var furnitureRewards: [String] {
         store.profile.rewards.filter {
@@ -350,7 +351,11 @@ private struct RoomView: View {
             ZStack(alignment: .bottom) {
                 RoundedRectangle(cornerRadius: 24).fill(Color(red: 0.87, green: 0.79, blue: 0.65))
                 VStack {
-                    Text("☁︎").font(.system(size: 46)).opacity(0.7)
+                    HStack {
+                        Label("休息区", systemImage: "bed.double.fill").font(.caption.bold()).foregroundColor(.white.opacity(0.85))
+                        Spacer()
+                        Label("学习角", systemImage: "books.vertical.fill").font(.caption.bold()).foregroundColor(.white.opacity(0.85))
+                    }
                     Spacer()
                     HStack { Text("🛏️").font(.system(size: 62)); Spacer(); Text("🪴").font(.system(size: 48)) }
                 }
@@ -375,6 +380,11 @@ private struct RoomView: View {
                 }
             }
             .frame(height: 260)
+            if let roomFeedback {
+                Label(roomFeedback, systemImage: "sparkles")
+                    .font(.caption)
+                    .foregroundColor(.purple)
+            }
             if furnitureRewards.isEmpty {
                 Text("完成成长事件后，家具会出现在这里。")
                     .foregroundColor(.secondary)
@@ -384,8 +394,10 @@ private struct RoomView: View {
                         Button(store.profile.placedFurniture.contains(furniture) ? "收起 \(furniture)" : "摆放 \(furniture)") {
                             if store.profile.placedFurniture.contains(furniture) {
                                 store.removeFurniture(furniture)
+                                roomFeedback = "已收起 \(furniture)"
                             } else {
                                 store.dispatch(.furniturePlaced(furniture))
+                                roomFeedback = "新布置完成：\(furniture)"
                             }
                         }
                             .buttonStyle(.borderedProminent)
