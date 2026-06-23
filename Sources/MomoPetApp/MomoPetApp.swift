@@ -167,9 +167,20 @@ private struct AcademyView: View {
 
     private var rabbitCard: some View {
         VStack(spacing: 10) {
-            RabbitPortraitView(profile: store.profile, size: 235)
-                .frame(width: 210, height: 235)
-                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            ZStack(alignment: .bottomTrailing) {
+                RabbitPortraitView(profile: store.profile, size: 235)
+                    .frame(width: 210, height: 235)
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                if let accessory = store.profile.equippedAccessory,
+                   let presentation = RoomRewardPresentation.forReward(accessory) {
+                    Image(systemName: presentation.symbol)
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                        .padding(9)
+                        .background(.white.opacity(0.85), in: Circle())
+                        .padding(10)
+                }
+            }
             Text("小白 · \(activityTitle)").font(.headline)
             Text(store.profile.equippedAccessory ?? "还没有佩戴配饰")
                 .font(.caption).foregroundColor(.blue)
@@ -327,7 +338,10 @@ private struct RoomView: View {
     @Environment(\.dismiss) private var dismiss
 
     private var furnitureRewards: [String] {
-        store.profile.rewards.filter { $0 != "蓝色领结" && $0 != "小红领巾" }.sorted()
+        store.profile.rewards.filter {
+            guard let presentation = RoomRewardPresentation.forReward($0) else { return false }
+            return presentation.kind == .furniture || presentation.kind == .keepsake
+        }.sorted()
     }
 
     var body: some View {
@@ -350,6 +364,15 @@ private struct RoomView: View {
                 if store.profile.placedFurniture.contains("小舞台摆件") {
                     Text("🎭").font(.system(size: 50)).offset(x: 0, y: -48)
                 }
+                if store.profile.placedFurniture.contains("彩虹积木") {
+                    Text("🧊").font(.system(size: 42)).offset(x: -118, y: 78)
+                }
+                if store.profile.placedFurniture.contains("小阅读灯") {
+                    Image(systemName: "lamp.desk.fill").font(.system(size: 38)).foregroundColor(.yellow).offset(x: 105, y: -40)
+                }
+                if store.profile.placedFurniture.contains("认真小贴纸") || store.profile.placedFurniture.contains("班级小贴纸") {
+                    Image(systemName: "star.fill").font(.system(size: 30)).foregroundColor(.orange).offset(x: 112, y: -105)
+                }
             }
             .frame(height: 260)
             if furnitureRewards.isEmpty {
@@ -358,7 +381,13 @@ private struct RoomView: View {
             } else {
                 HStack {
                     ForEach(furnitureRewards, id: \.self) { furniture in
-                        Button("摆放 \(furniture)") { store.dispatch(.furniturePlaced(furniture)) }
+                        Button(store.profile.placedFurniture.contains(furniture) ? "收起 \(furniture)" : "摆放 \(furniture)") {
+                            if store.profile.placedFurniture.contains(furniture) {
+                                store.removeFurniture(furniture)
+                            } else {
+                                store.dispatch(.furniturePlaced(furniture))
+                            }
+                        }
                             .buttonStyle(.borderedProminent)
                     }
                 }

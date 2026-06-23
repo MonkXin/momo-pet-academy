@@ -16,6 +16,11 @@ final class PetStore: ObservableObject {
         try? repository.save(profile)
     }
 
+    func removeFurniture(_ furniture: String) {
+        profile.placedFurniture.remove(furniture)
+        try? repository.save(profile)
+    }
+
     func reconcileOfflineTime(since lastOpened: Date, now: Date) {
         let elapsed = max(0, now.timeIntervalSince(lastOpened))
         let wholeDays = Int(elapsed / 86_400)
